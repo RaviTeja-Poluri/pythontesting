@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
+import wikipedia_scraping
 from mysql_service import MysqlDbConnSingleton
 
 headers = {
@@ -26,7 +27,7 @@ def addImageUrls():
 def add_names():
     global names
     for tag in soup.findAll("h2", {"class": "ptvObjective"}):
-        names.append(tag.get_text().split('.')[1].strip())
+        names.append(tag.get_text().split('.', 1)[1].strip())
 
 
 def add_desc():
@@ -53,7 +54,12 @@ if r.status_code == 200:
     print(len(images))
     print(len(descriptions))
     mysql = MysqlDbConnSingleton()
+    names_wiki_urls = {}
     for place_no in range(0, len(names)):
-        mysql.add_new_place(description=descriptions[place_no], name=names[place_no], nearest_airport="", nearest_bus_terminal="",
-                            nearest_railway_station="",
-                            state_name="telangana", city_name="Hyderabad")
+        place_name = names[place_no]
+        name_urls = wikipedia_scraping.search_wiki(place_name, "Hyderabad")
+        names_wiki_urls[place_name] = name_urls
+        # mysql.add_new_place(description=descriptions[place_no], name=names[place_no], nearest_airport="", nearest_bus_terminal="",
+        #                     nearest_railway_station="",
+        #                     state_name="Telangana", city_name="Hyderabad")
+    print(names_wiki_urls)
