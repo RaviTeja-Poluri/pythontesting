@@ -1,9 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 
-import wikipedia_scraping
-from mysql_service import MysqlDbConnSingleton
-
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36',
     'Pragma': 'no-cache'
@@ -14,6 +11,7 @@ soup = ""
 images = []
 names = []
 descriptions = []
+distances = []
 
 
 def addImageUrls():
@@ -30,6 +28,19 @@ def add_names():
         names.append(tag.get_text().split('.', 1)[1].strip())
 
 
+def add_distances():
+    global distances
+    all = soup.findAll("div", {"class": "ptvParameters col-md-12 col-xs-12"})
+    for a in all:
+        distance_soup = BeautifulSoup(str(a), 'lxml')
+        all_nested_elems = distance_soup.findAll("p")
+        for para in all_nested_elems:
+            distance_km = para.get_text()
+            if "km" in distance_km:
+                distances.append(distance_km)
+                break
+
+
 def add_desc():
     global descriptions
     for desc in soup.findAll("p", {"class": "ptvText"}):
@@ -41,6 +52,8 @@ def get_page_count():
     # no_of_pages = soup.findAll("a", {"class": "paginationDigits"})
 
 
+# TODO : add new column for storing distance of place from center of city
+
 if r.status_code == 200:
     # print(r.text)
     soup = BeautifulSoup(r.text, 'lxml')
@@ -50,16 +63,22 @@ if r.status_code == 200:
     addImageUrls()
     add_names()
     add_desc()
+    add_distances()
     print(len(names))
     print(len(images))
     print(len(descriptions))
-    mysql = MysqlDbConnSingleton()
-    names_wiki_urls = {}
-    for place_no in range(0, len(names)):
-        place_name = names[place_no]
-        name_urls = wikipedia_scraping.search_wiki(place_name, "Hyderabad")
-        names_wiki_urls[place_name] = name_urls
-        # mysql.add_new_place(description=descriptions[place_no], name=names[place_no], nearest_airport="", nearest_bus_terminal="",
-        #                     nearest_railway_station="",
-        #                     state_name="Telangana", city_name="Hyderabad")
-    print(names_wiki_urls)
+    print(distances)
+    # mysql = MysqlDbConnSingleton()
+    # names_wiki_urls = {}
+    # for place_no in range(0, len(names)):
+    #     place_name = names[place_no]
+    #     if mysql.name_exists(place_name):
+    #         print("already in db")
+    #     else:
+    #         wiki_data = wikipedia_scraping.search_wiki(place_name, "Hyderabad")
+    #         print(wiki_data)
+    #         mysql.add_new_place(description=descriptions[place_no], brief_info=wiki_data, name=names[place_no],
+    #                             nearest_airport="",
+    #                             nearest_bus_terminal="",
+    #                             nearest_railway_station="",
+    #                             state_name="Telangana", city_name="Hyderabad")

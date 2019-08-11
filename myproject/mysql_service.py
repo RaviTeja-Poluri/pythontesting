@@ -17,6 +17,15 @@ class MysqlDbConnSingleton:
     def __init__(self):
         self.create_db_conn()
 
+    def name_exists(self, name):
+        print("checking name '%s' exists or not" % name)
+        my_cursor = self.db_conn.cursor()
+        name_sql = "SELECT count(*) FROM places WHERE name='" + name + "'"
+        my_cursor.execute(name_sql)
+        count_of_records = my_cursor.fetchall()[0][0]
+        print("count of records exists %s" % str(count_of_records))
+        return count_of_records != 0
+
     def add_new_place(self, description="", brief_info="", name=None, nearest_airport="", nearest_bus_terminal="",
                       nearest_railway_station="", state_name="", city_name=""):
         state_id = self.get_state_id_by_name(state_name)
