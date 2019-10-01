@@ -1,0 +1,1 @@
+This project shows an example to read from a website and store info in elasticsearch.
