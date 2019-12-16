@@ -1,2 +1,2 @@
 # pythontesting
- All python related projects
+ python code samples
